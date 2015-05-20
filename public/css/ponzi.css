@@ -4,7 +4,7 @@ html, body {
     height: 100%;
 }
 body {
-	font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
     font-size: 100%;
     text-align: center;
 }
@@ -23,10 +23,20 @@ body {
 .up::before {
     font-weight: bold;
     color: green;
-    content: "up!";
+    content: 'up!';
 }
 .down::before {
     font-weight: bold;
     color: red;
-    content: "down!";
+    content: 'down!';
+}
+.wait::before {
+    content: '';
+    background-image:url('https://i1.wp.com/cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif');
+    background-size: 1em 1em;
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    position: relative;
+    top: 0.2em;
 }

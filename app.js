@@ -8,6 +8,18 @@ var port = process.env.PORT || 80;
 var updateRate = process.env.UPDATE_RATE || 3600 * 1000;
 var fullPublicPath = path.join(__dirname, publicPath);
 
+// init server
+
+var app = express();
+var server = http.createServer(app);
+var router = express.Router();
+
+app.set('port', port);
+app.get('/', function(req, res) {
+  res.sendFile(path.join(fullPublicPath, '/index.html'));
+});
+app.use(publicPath, express.static(fullPublicPath));
+
 function die(err) {
   console.error(err.message);
   process.exit(1);
@@ -17,8 +29,6 @@ function compareLatest(latest, history) {
   if (history[history.length-1].time < latest.time) {
     history.push(latest);
     console.log('updated ' + JSON.stringify(latest));
-  } else {
-    console.log('no update');
   }
 }
 
@@ -42,7 +52,6 @@ rates.fetchHistory(function(err, history) {
   }
 
   // data update loop
-
   fetchAndCompare(history);
   var interval = setInterval(function() {
     fetchAndCompare(history);
@@ -53,16 +62,38 @@ rates.fetchHistory(function(err, history) {
 });
 
 // start server
-
+//
 function start(history) {
-  var app = express();
-  var server = http.createServer(app);
 
-  app.set('port', port);
-  app.get('/', function(req, res) {
-    res.sendFile(path.join(fullPublicPath, '/index.html'));
+  router.get('/history', function(req, res) {
+    var data = history;
+    var since = new Date(req.query.since);
+    if (!isNaN(since)) {
+      data = data.filter(function(x) {
+        return x.t >= since;
+      });
+    }
+    var until = new Date(req.query.until);
+    if (!isNaN(until)) {
+      data = data.filter(function(x) {
+        return x.t < until;
+      });
+    }
+    res.json(data);
   });
-  app.use(publicPath, express.static(fullPublicPath));
+  router.get('/latest', function(req, res) {
+    res.json(history[history.length-1]);
+  });
+  router.get('/predict', function(req, res) {
+    var e = history.length-1
+    var d = new Date(history[e].t);
+    d.setDate(d.getDate()+1);
+    res.json({
+      t: d,
+      x: history[e].x > history[e-1].x ? "up" : "down"
+    });
+  });
+  app.use('/api',router);
 
   server.listen(port);
   console.log('Listening on port ' + port);
